@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetworkView IS - Информационная система</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Заголовок системы -->
+    <header class="bg-blue-900 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-network-wired text-2xl"></i>
+                <h1 class="text-xl font-bold">NetworkView IS</h1>
+                <span class="text-blue-200 text-sm">v1.0.0</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                    <span class="text-sm">Онлайн</span>
+                </div>
+                <button id="settingsBtn" class="p-2 hover:bg-blue-800 rounded-lg transition-colors">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контейнер -->
+    <main class="container mx-auto p-4">
+        <!-- Адаптивная сетка виджетов -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6">
+            
+            <!-- Плашка 1: Нормативная документация по ИБ -->
+            <div class="bg-white rounded-lg shadow-lg p-6 widget-card" id="documentsWidget">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-file-alt text-blue-600 mr-2"></i>
+                        Нормативная документация ИБ
+                    </h2>
+                    <div class="flex space-x-2">
+                        <button id="uploadDocBtn" class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm">
+                            <i class="fas fa-upload mr-1"></i>Загрузить
+                        </button>
+                        <button id="refreshDocsBtn" class="p-2 text-gray-500 hover:text-gray-700 transition-colors">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Поиск и фильтры -->
+                <div class="mb-4 space-y-3">
+                    <div class="relative">
+                        <input type="text" id="docSearch" placeholder="Поиск по названию или тегам..." 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <select id="categoryFilter" class="px-3 py-1 border border-gray-300 rounded-md text-sm">
+                            <option value="">Все категории</option>
+                            <option value="ГОСТ">ГОСТ</option>
+                            <option value="ISO">ISO</option>
+                            <option value="ФЗ">ФЗ</option>
+                            <option value="Приказы">Приказы</option>
+                        </select>
+                        <select id="typeFilter" class="px-3 py-1 border border-gray-300 rounded-md text-sm">
+                            <option value="">Все типы</option>
+                            <option value="PDF">PDF</option>
+                            <option value="DOCX">DOCX</option>
+                            <option value="TXT">TXT</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Список документов -->
+                <div id="documentsList" class="space-y-3 max-h-96 overflow-y-auto">
+                    <!-- Документы будут загружены динамически -->
+                </div>
+            </div>
+
+            <!-- Плашка 2: Интерактивная схема из .drawio -->
+            <div class="bg-white rounded-lg shadow-lg p-6 widget-card" id="diagramWidget">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-project-diagram text-green-600 mr-2"></i>
+                        Интерактивная схема
+                    </h2>
+                    <div class="flex space-x-2">
+                        <button id="uploadDiagramBtn" class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm">
+                            <i class="fas fa-upload mr-1"></i>Загрузить .drawio
+                        </button>
+                        <button id="exportDiagramBtn" class="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm">
+                            <i class="fas fa-download mr-1"></i>Экспорт
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Панель управления схемой -->
+                <div class="mb-4 flex flex-wrap gap-2">
+                    <button id="zoomInBtn" class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button id="zoomOutBtn" class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button id="fitToScreenBtn" class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                    </button>
+                    <select id="diagramList" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                        <option value="">Выберите схему...</option>
+                    </select>
+                </div>
+                
+                <!-- Контейнер для схемы -->
+                <div id="diagramContainer" class="border border-gray-300 rounded-lg bg-gray-50 relative overflow-hidden" style="height: 400px;">
+                    <div id="diagramCanvas" class="w-full h-full"></div>
+                    <div id="diagramPlaceholder" class="absolute inset-0 flex items-center justify-center text-gray-500">
+                        <div class="text-center">
+                            <i class="fas fa-upload text-4xl mb-3"></i>
+                            <p>Загрузите файл .drawio для отображения схемы</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Плашка 3: Мониторинг сети -->
+            <div class="bg-white rounded-lg shadow-lg p-6 widget-card" id="monitoringWidget">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-chart-line text-orange-600 mr-2"></i>
+                        Мониторинг сети
+                    </h2>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span class="text-sm text-gray-600">Обновляется</span>
+                    </div>
+                </div>
+                
+                <!-- Статистика -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-green-50 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-green-600" id="activeDevices">--</div>
+                        <div class="text-sm text-gray-600">Активные устройства</div>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-red-600" id="inactiveDevices">--</div>
+                        <div class="text-sm text-gray-600">Неактивные устройства</div>
+                    </div>
+                </div>
+                
+                <!-- Список устройств -->
+                <div id="devicesList" class="space-y-2 max-h-64 overflow-y-auto">
+                    <!-- Устройства загружаются динамически -->
+                </div>
+            </div>
+
+            <!-- Плашка 4: Журнал событий -->
+            <div class="bg-white rounded-lg shadow-lg p-6 widget-card" id="logsWidget">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-list-alt text-purple-600 mr-2"></i>
+                        Журнал событий
+                    </h2>
+                    <div class="flex space-x-2">
+                        <button id="clearLogsBtn" class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm">
+                            <i class="fas fa-trash mr-1"></i>Очистить
+                        </button>
+                        <button id="exportLogsBtn" class="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm">
+                            <i class="fas fa-download mr-1"></i>Экспорт
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Фильтры логов -->
+                <div class="mb-4 flex flex-wrap gap-2">
+                    <select id="logLevelFilter" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                        <option value="">Все уровни</option>
+                        <option value="INFO">Информация</option>
+                        <option value="WARNING">Предупреждения</option>
+                        <option value="ERROR">Ошибки</option>
+                    </select>
+                    <input type="date" id="logDateFilter" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                </div>
+                
+                <!-- Журнал событий -->
+                <div id="logsList" class="space-y-2 max-h-64 overflow-y-auto font-mono text-sm">
+                    <!-- Логи загружаются динамически -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Модальное окно для превью документов -->
+    <div id="documentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-hidden">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h3 id="modalTitle" class="text-lg font-semibold"></h3>
+                    <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="modalContent" class="p-4 overflow-y-auto" style="max-height: 70vh;">
+                    <!-- Содержимое документа -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для информации об элементах диаграммы -->
+    <div id="elementModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h3 id="elementModalTitle" class="text-lg font-semibold">Информация об элементе</h3>
+                    <button id="closeElementModalBtn" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="elementModalContent" class="p-4">
+                    <!-- Информация об элементе диаграммы -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Скрипты -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.1/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="https://unpkg.com/mxgraph@4.2.2/javascript/dist/build.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/documents.js"></script>
+    <script src="js/diagrams.js"></script>
+    <script src="js/monitoring.js"></script>
+</body>
+</html> 

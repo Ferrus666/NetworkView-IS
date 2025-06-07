@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetworkView IS - Демо версия</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Дополнительные стили для демо */
+        .demo-badge {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 1000;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .offline-indicator {
+            background: #ff6b6b !important;
+        }
+        
+        .demo-notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: #3b82f6;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Демо бэдж -->
+    <div class="demo-badge">
+        <i class="fas fa-flask mr-1"></i>ДЕМО ВЕРСИЯ
+    </div>
+
+    <!-- Уведомление о демо режиме -->
+    <div id="demoNotification" class="demo-notification">
+        <i class="fas fa-info-circle mr-2"></i>
+        Демо режим - серверная часть отключена
+        <button onclick="closeDemoNotification()" class="ml-3 text-white hover:text-gray-200">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Заголовок системы -->
+    <header class="bg-blue-900 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-network-wired text-2xl"></i>
+                <h1 class="text-xl font-bold">NetworkView IS</h1>
+                <span class="text-blue-200 text-sm">v1.0.0 (Demo)</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-red-400 rounded-full offline-indicator"></div>
+                    <span class="text-sm">Демо режим</span>
+                </div>
+                <button id="settingsBtn" class="p-2 hover:bg-blue-800 rounded-lg transition-colors">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Основной контейнер -->
+    <main class="container mx-auto p-4">
+        <!-- Адаптивная сетка виджетов -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6">
+            
+            <!-- Плашка 1: Нормативная документация по ИБ -->
+            <div class="bg-white rounded-lg shadow-lg p-6 widget-card" id="documentsWidget">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-file-alt text-blue-600 mr-2"></i>
+                        Нормативная документация ИБ
+                    </h2>
+                    <div class="flex space-x-2">
+                        <button id="uploadDocBtn" class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm">
+                            <i class="fas fa-upload mr-1"></i>Загрузить
+                        </button>
+                        <button id="refreshDocsBtn" class="p-2 text-gray-500 hover:text-gray-700 transition-colors">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Поиск и фильтры -->
+                <div class="mb-4 space-y-3">
+                    <div class="relative">
+                        <input type="text" id="docSearch" placeholder="Поиск по названию или тегам..." 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <select id="categoryFilter" class="px-3 py-1 border border-gray-300 rounded-md text-sm">
+                            <option value="">Все категории</option>
+                            <option value="ГОСТ">ГОСТ</option>
+                            <option value="ISO">ISO</option>
+                            <option value="ФЗ">ФЗ</option>
+                            <option value="Приказы">Приказы</option>
+                        </select>
+                        <select id="typeFilter" class="px-3 py-1 border border-gray-300 rounded-md text-sm">
+                            <option value="">Все типы</option>
+                            <option value="PDF">PDF</option>
+                            <option value="DOCX">DOCX</option>
+                            <option value="TXT">TXT</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Список документов -->
+                <div id="documentsList" class="space-y-3 max-h-96 overflow-y-auto scrollbar-custom">
+                    <!-- Документы загружаются JavaScript -->
+                </div>
+            </div>
+
+            <!-- Плашка 2: Интерактивная схема из .drawio -->
+            <div class="bg-white rounded-lg shadow-lg p-6 widget-card" id="diagramWidget">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-project-diagram text-green-600 mr-2"></i>
+                        Интерактивная схема
+                    </h2>
+                    <div class="flex space-x-2">
+                        <button id="uploadDiagramBtn" class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm">
+                            <i class="fas fa-upload mr-1"></i>Загрузить .drawio
+                        </button>
+                        <button id="exportDiagramBtn" class="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm">
+                            <i class="fas fa-download mr-1"></i>Экспорт
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Панель управления схемой -->
+                <div class="mb-4 flex flex-wrap gap-2">
+                    <button id="zoomInBtn" class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button id="zoomOutBtn" class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button id="fitToScreenBtn" class="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                    </button>
+                    <select id="diagramList" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                        <option value="">Выберите схему...</option>
+                    </select>
+                </div>
+                
+                <!-- Контейнер для схемы -->
+                <div id="diagramContainer" class="border border-gray-300 rounded-lg bg-gray-50 relative overflow-hidden" style="height: 400px;">
+                    <div id="diagramCanvas" class="w-full h-full">
+                        <svg id="diagramSvg" width="100%" height="100%" viewBox="0 0 800 600">
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                                        refX="0" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
+                                </marker>
+                            </defs>
+                            <g id="diagramGroup"></g>
+                        </svg>
+                    </div>
+                    <div id="diagramPlaceholder" class="absolute inset-0 flex items-center justify-center text-gray-500">
+                        <div class="text-center">
+                            <i class="fas fa-project-diagram text-4xl mb-3"></i>
+                            <p>Выберите схему из списка для отображения</p>
+                            <p class="text-sm mt-2">или загрузите новый файл .drawio</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Плашка 3: Мониторинг сети -->
+            <div class="bg-white rounded-lg shadow-lg p-6 widget-card" id="monitoringWidget">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-chart-line text-orange-600 mr-2"></i>
+                        Мониторинг сети
+                    </h2>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+                        <span class="text-sm text-gray-600">Симуляция</span>
+                    </div>
+                </div>
+                
+                <!-- Статистика -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-green-50 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-green-600" id="activeDevices">4</div>
+                        <div class="text-sm text-gray-600">Активные устройства</div>
+                    </div>
+                    <div class="bg-red-50 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-red-600" id="inactiveDevices">2</div>
+                        <div class="text-sm text-gray-600">Неактивные устройства</div>
+                    </div>
+                </div>
+                
+                <!-- Список устройств -->
+                <div id="devicesList" class="space-y-2 max-h-64 overflow-y-auto scrollbar-custom">
+                    <!-- Устройства загружаются JavaScript -->
+                </div>
+            </div>
+
+            <!-- Плашка 4: Журнал событий -->
+            <div class="bg-white rounded-lg shadow-lg p-6 widget-card" id="logsWidget">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-list-alt text-purple-600 mr-2"></i>
+                        Журнал событий
+                    </h2>
+                    <div class="flex space-x-2">
+                        <button id="clearLogsBtn" class="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm">
+                            <i class="fas fa-trash mr-1"></i>Очистить
+                        </button>
+                        <button id="exportLogsBtn" class="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm">
+                            <i class="fas fa-download mr-1"></i>Экспорт
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Фильтры логов -->
+                <div class="mb-4 flex flex-wrap gap-2">
+                    <select id="logLevelFilter" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                        <option value="">Все уровни</option>
+                        <option value="INFO">Информация</option>
+                        <option value="WARNING">Предупреждения</option>
+                        <option value="ERROR">Ошибки</option>
+                    </select>
+                    <input type="date" id="logDateFilter" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                </div>
+                
+                <!-- Журнал событий -->
+                <div id="logsList" class="space-y-2 max-h-64 overflow-y-auto font-mono text-sm scrollbar-custom">
+                    <!-- Логи загружаются JavaScript -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Модальные окна -->
+    <div id="documentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-hidden">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h3 id="modalTitle" class="text-lg font-semibold"></h3>
+                    <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="modalContent" class="p-4 overflow-y-auto" style="max-height: 70vh;">
+                    <!-- Содержимое документа -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="elementModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h3 id="elementModalTitle" class="text-lg font-semibold">Информация об элементе</h3>
+                    <button id="closeElementModalBtn" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="elementModalContent" class="p-4">
+                    <!-- Информация об элементе диаграммы -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статусбар -->
+    <div class="status-bar">
+        <div class="flex items-center space-x-4">
+            <span>NetworkView IS v1.0.0 (Demo)</span>
+            <span>Устройств: <span id="deviceCount">6</span></span>
+            <span>Документов: <span id="documentCount">5</span></span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="time" id="currentTime"></span>
+            <span>Статус: <span id="systemStatus">Демо режим</span></span>
+        </div>
+    </div>
+
+    <!-- Скрипты -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.1/marked.min.js"></script>
+    <script>
+        // Упрощенная демо-версия NetworkView IS
+        
+        // Закрытие уведомления о демо режиме
+        function closeDemoNotification() {
+            document.getElementById('demoNotification').style.display = 'none';
+        }
+
+        // Автоматическое закрытие уведомления через 5 секунд
+        setTimeout(closeDemoNotification, 5000);
+
+        // Обновление времени
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('ru-RU');
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Демо данные
+        const demoData = {
+            documents: [
+                {
+                    id: 1,
+                    name: 'ФЗ-152 О персональных данных',
+                    description: 'Федеральный закон о персональных данных',
+                    category: 'ФЗ',
+                    type: 'PDF',
+                    size: '2.3 MB',
+                    uploadDate: '2024-01-15',
+                    tags: ['персональные данные', 'защита информации', 'федеральный закон']
+                },
+                {
+                    id: 2,
+                    name: 'ISO/IEC 27001:2013',
+                    description: 'Системы менеджмента информационной безопасности',
+                    category: 'ISO',
+                    type: 'PDF',
+                    size: '1.8 MB',
+                    uploadDate: '2024-01-20',
+                    tags: ['ISO', 'ISMS', 'информационная безопасность']
+                },
+                {
+                    id: 3,
+                    name: 'ГОСТ Р 57580-2017',
+                    description: 'Безопасность информационных технологий',
+                    category: 'ГОСТ',
+                    type: 'PDF',
+                    size: '3.1 MB',
+                    uploadDate: '2024-01-25',
+                    tags: ['ГОСТ', 'ИТ безопасность', 'российский стандарт']
+                }
+            ],
+            devices: [
+                {
+                    id: 'dev1',
+                    name: 'Главный маршрутизатор',
+                    ip: '192.168.1.1',
+                    type: 'router',
+                    status: 'online',
+                    lastSeen: new Date(Date.now() - 30000)
+                },
+                {
+                    id: 'dev2',
+                    name: 'Коммутатор Level 2',
+                    ip: '192.168.1.10',
+                    type: 'switch',
+                    status: 'online',
+                    lastSeen: new Date(Date.now() - 60000)
+                },
+                {
+                    id: 'dev3',
+                    name: 'Файловый сервер',
+                    ip: '192.168.1.100',
+                    type: 'server',
+                    status: 'warning',
+                    lastSeen: new Date(Date.now() - 120000)
+                },
+                {
+                    id: 'dev4',
+                    name: 'Принтер HP',
+                    ip: '192.168.1.150',
+                    type: 'printer',
+                    status: 'offline',
+                    lastSeen: new Date(Date.now() - 300000)
+                }
+            ],
+            logs: [
+                {
+                    id: 1,
+                    timestamp: new Date(),
+                    level: 'INFO',
+                    source: 'Demo',
+                    message: 'Демо система NetworkView IS запущена'
+                },
+                {
+                    id: 2,
+                    timestamp: new Date(Date.now() - 60000),
+                    level: 'WARNING',
+                    source: 'Demo',
+                    message: 'Демо режим - серверная часть недоступна'
+                },
+                {
+                    id: 3,
+                    timestamp: new Date(Date.now() - 120000),
+                    level: 'INFO',
+                    source: 'Demo',
+                    message: 'Загружены тестовые данные'
+                }
+            ]
+        };
+
+        // Рендеринг документов
+        function renderDocuments() {
+            const container = document.getElementById('documentsList');
+            container.innerHTML = '';
+
+            demoData.documents.forEach(doc => {
+                const docElement = document.createElement('div');
+                docElement.className = 'document-item';
+                docElement.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center mb-2">
+                                <div class="file-icon ${doc.type.toLowerCase()} mr-3">
+                                    <i class="fas fa-file-pdf"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-gray-900">${doc.name}</h3>
+                                    <p class="text-sm text-gray-600">${doc.description}</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-1 mb-2">
+                                <span class="tag category-${doc.category.toLowerCase()}">${doc.category}</span>
+                                ${doc.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                            </div>
+                            <div class="flex items-center text-xs text-gray-500 space-x-4">
+                                <span><i class="fas fa-calendar mr-1"></i>${new Date(doc.uploadDate).toLocaleDateString('ru-RU')}</span>
+                                <span><i class="fas fa-hdd mr-1"></i>${doc.size}</span>
+                                <span><i class="fas fa-file mr-1"></i>${doc.type}</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col space-y-2 ml-4">
+                            <button class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm" 
+                                    onclick="previewDocument(${doc.id})">
+                                <i class="fas fa-eye mr-1"></i>Просмотр
+                            </button>
+                            <button class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
+                                    onclick="demoAlert('Загрузка документа')">
+                                <i class="fas fa-download mr-1"></i>Скачать
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(docElement);
+            });
+        }
+
+        // Рендеринг устройств
+        function renderDevices() {
+            const container = document.getElementById('devicesList');
+            container.innerHTML = '';
+
+            demoData.devices.forEach(device => {
+                const deviceElement = document.createElement('div');
+                deviceElement.className = 'device-item';
+                const timeDiff = formatTimeDifference(device.lastSeen);
+                
+                deviceElement.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <div class="flex items-center flex-1">
+                            <div class="device-status ${device.status}"></div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="text-sm font-medium text-gray-900">${device.name}</h4>
+                                    <span class="text-xs text-gray-500">${device.ip}</span>
+                                </div>
+                                <div class="flex items-center justify-between text-xs text-gray-600">
+                                    <span>${device.type}</span>
+                                    <span>Обновлено: ${timeDiff}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-1 ml-2">
+                            <button class="p-1 text-blue-500 hover:text-blue-700" 
+                                    onclick="demoAlert('Информация об устройстве')" title="Подробности">
+                                <i class="fas fa-info-circle text-sm"></i>
+                            </button>
+                            <button class="p-1 text-green-500 hover:text-green-700" 
+                                    onclick="demoAlert('Пинг устройства')" title="Пинг">
+                                <i class="fas fa-satellite-dish text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(deviceElement);
+            });
+        }
+
+        // Рендеринг логов
+        function renderLogs() {
+            const container = document.getElementById('logsList');
+            container.innerHTML = '';
+
+            demoData.logs.forEach(log => {
+                const logElement = document.createElement('div');
+                logElement.className = `log-entry ${log.level.toLowerCase()}`;
+                logElement.innerHTML = `
+                    <span class="log-timestamp">${new Date(log.timestamp).toLocaleString('ru-RU')}</span>
+                    <span class="log-level ${log.level.toLowerCase()}">[${log.level}]</span>
+                    <span class="text-sm text-gray-700">[${log.source}]</span>
+                    <div class="log-message mt-1">${log.message}</div>
+                `;
+                container.appendChild(logElement);
+            });
+        }
+
+        // Вспомогательные функции
+        function formatTimeDifference(date) {
+            const now = new Date();
+            const diff = now - date;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            
+            if (minutes > 0) return `${minutes}м назад`;
+            return `${seconds}с назад`;
+        }
+
+        function demoAlert(action) {
+            alert(`Демо режим: ${action}\n\nВ полной версии здесь будет реальная функциональность.\nДля полноценной работы установите Node.js и запустите сервер.`);
+        }
+
+        function previewDocument(docId) {
+            const doc = demoData.documents.find(d => d.id === docId);
+            if (!doc) return;
+
+            const modal = document.getElementById('documentModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+
+            modalTitle.textContent = doc.name;
+            modalContent.innerHTML = marked.parse(`
+# ${doc.name}
+
+## Описание
+${doc.description}
+
+## Демо контент
+
+Это демонстрационный просмотр документа. В полной версии системы здесь будет отображаться реальное содержимое загруженных документов.
+
+### Поддерживаемые форматы:
+- PDF документы
+- Microsoft Word (.docx)
+- Текстовые файлы (.txt)
+
+### Функциональность:
+- Полнотекстовый поиск
+- Система тегов
+- Категоризация
+- Экспорт и импорт
+
+---
+**Категория:** ${doc.category}  
+**Теги:** ${doc.tags.join(', ')}  
+**Дата загрузки:** ${new Date(doc.uploadDate).toLocaleDateString('ru-RU')}
+            `);
+
+            modal.classList.remove('hidden');
+        }
+
+        // Обработчики событий
+        document.getElementById('closeModalBtn').onclick = () => {
+            document.getElementById('documentModal').classList.add('hidden');
+        };
+
+        document.getElementById('closeElementModalBtn').onclick = () => {
+            document.getElementById('elementModal').classList.add('hidden');
+        };
+
+        // Кнопки, которые показывают демо уведомления
+        document.getElementById('uploadDocBtn').onclick = () => demoAlert('Загрузка документа');
+        document.getElementById('refreshDocsBtn').onclick = () => demoAlert('Обновление списка документов');
+        document.getElementById('uploadDiagramBtn').onclick = () => demoAlert('Загрузка диаграммы');
+        document.getElementById('exportDiagramBtn').onclick = () => demoAlert('Экспорт диаграммы');
+        document.getElementById('clearLogsBtn').onclick = () => demoAlert('Очистка журнала');
+        document.getElementById('exportLogsBtn').onclick = () => demoAlert('Экспорт журнала');
+        document.getElementById('settingsBtn').onclick = () => demoAlert('Настройки системы');
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDocuments();
+            renderDevices();
+            renderLogs();
+            
+            // Симуляция активности
+            setInterval(() => {
+                // Добавление случайного лога
+                if (Math.random() > 0.7) {
+                    const levels = ['INFO', 'WARNING', 'ERROR'];
+                    const messages = [
+                        'Демо событие сгенерировано',
+                        'Симуляция мониторинга устройств',
+                        'Тестовое уведомление системы'
+                    ];
+                    
+                    demoData.logs.unshift({
+                        id: Date.now(),
+                        timestamp: new Date(),
+                        level: levels[Math.floor(Math.random() * levels.length)],
+                        source: 'Demo',
+                        message: messages[Math.floor(Math.random() * messages.length)]
+                    });
+                    
+                    if (demoData.logs.length > 20) {
+                        demoData.logs = demoData.logs.slice(0, 20);
+                    }
+                    
+                    renderLogs();
+                }
+            }, 10000);
+        });
+    </script>
+</body>
+</html> 

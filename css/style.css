@@ -1,0 +1,343 @@
+/* Дополнительные стили для NetworkView IS */
+
+/* Анимации и переходы */
+.widget-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.widget-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Кастомные скроллбары */
+.scrollbar-custom::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Стили для списка документов */
+.document-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    background: white;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.document-item:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.document-item.selected {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+/* Стили для тегов */
+.tag {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: #e5e7eb;
+    color: #374151;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.tag.category-gost { background: #fef3c7; color: #92400e; }
+.tag.category-iso { background: #d1fae5; color: #065f46; }
+.tag.category-fz { background: #fde2e8; color: #b91c1c; }
+.tag.category-order { background: #e0e7ff; color: #3730a3; }
+
+/* Стили для диаграммы */
+#diagramContainer {
+    position: relative;
+    overflow: hidden;
+}
+
+.diagram-node {
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.diagram-node:hover {
+    opacity: 0.8;
+}
+
+.diagram-edge {
+    cursor: pointer;
+    stroke-width: 2;
+    transition: stroke-width 0.2s ease;
+}
+
+.diagram-edge:hover {
+    stroke-width: 3;
+}
+
+/* Стили для мониторинга */
+.device-item {
+    display: flex;
+    align-items: center;
+    justify-content: between;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: white;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.device-item:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.device-status {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    margin-right: 0.75rem;
+}
+
+.device-status.online { background: #10b981; }
+.device-status.offline { background: #ef4444; }
+.device-status.warning { background: #f59e0b; }
+
+/* Стили для логов */
+.log-entry {
+    padding: 0.5rem;
+    border-left: 3px solid #e5e7eb;
+    margin-bottom: 0.5rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    background: #f9fafb;
+    border-radius: 0 0.25rem 0.25rem 0;
+}
+
+.log-entry.info { border-left-color: #3b82f6; }
+.log-entry.warning { border-left-color: #f59e0b; }
+.log-entry.error { border-left-color: #ef4444; }
+
+.log-timestamp {
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.log-level {
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0 0.5rem;
+}
+
+.log-level.info { color: #3b82f6; }
+.log-level.warning { color: #f59e0b; }
+.log-level.error { color: #ef4444; }
+
+/* Стили для модальных окон */
+.modal-overlay {
+    backdrop-filter: blur(4px);
+}
+
+/* Стили для drag and drop */
+.drop-zone {
+    border: 2px dashed #cbd5e1;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.2s ease;
+    background: #f8fafc;
+}
+
+.drop-zone.drag-over {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.drop-zone.drag-over .drop-text {
+    color: #3b82f6;
+}
+
+/* Анимация загрузки */
+.loading-spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+    width: 1.5rem;
+    height: 1.5rem;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .widget-card {
+        margin-bottom: 1rem;
+    }
+    
+    #diagramContainer {
+        height: 300px !important;
+    }
+    
+    .grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .container {
+        padding: 0.5rem;
+    }
+    
+    .widget-card {
+        padding: 1rem;
+    }
+    
+    #diagramContainer {
+        height: 250px !important;
+    }
+}
+
+/* Стили для файлового менеджера */
+.file-manager {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: white;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.2s ease;
+    cursor: pointer;
+}
+
+.file-item:hover {
+    background: #f9fafb;
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.file-icon {
+    width: 2rem;
+    height: 2rem;
+    margin-right: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+}
+
+.file-icon.pdf { background: #fef2f2; color: #dc2626; }
+.file-icon.docx { background: #eff6ff; color: #2563eb; }
+.file-icon.txt { background: #f0fdf4; color: #16a34a; }
+
+/* Стили для статусбара */
+.status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2rem;
+    background: #1f2937;
+    color: #d1d5db;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    font-size: 0.75rem;
+    z-index: 40;
+}
+
+/* Стили для уведомлений */
+.notification {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    max-width: 24rem;
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    padding: 1rem;
+    border-left: 4px solid #3b82f6;
+    animation: slideInRight 0.3s ease;
+    z-index: 50;
+}
+
+.notification.success { border-left-color: #10b981; }
+.notification.warning { border-left-color: #f59e0b; }
+.notification.error { border-left-color: #ef4444; }
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Темная тема */
+.dark-theme {
+    background: #1f2937;
+    color: #f9fafb;
+}
+
+.dark-theme .widget-card {
+    background: #374151;
+    border-color: #4b5563;
+}
+
+.dark-theme .document-item,
+.dark-theme .device-item {
+    background: #4b5563;
+    border-color: #6b7280;
+}
+
+.dark-theme .log-entry {
+    background: #4b5563;
+}
+
+/* Печать */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .widget-card {
+        break-inside: avoid;
+        margin-bottom: 1rem;
+    }
+    
+    body {
+        background: white !important;
+    }
+} 
