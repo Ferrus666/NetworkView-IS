@@ -1,204 +1,587 @@
-# 🚀 Инструкция по установке NetworkView IS
+# 🚀 Руководство по установке NetworkView IS 2.0
 
-## 📋 Предварительные требования
+## 📋 Системные требования
 
-Для работы системы NetworkView IS необходимо установить Node.js и npm.
+### Минимальные требования
+- **ОС:** Linux Ubuntu 20.04+, Windows 10+, macOS 10.15+
+- **RAM:** 4 GB (рекомендуется 8 GB)
+- **Диск:** 10 GB свободного места
+- **CPU:** 2 cores (рекомендуется 4 cores)
 
-## 🔧 Установка Node.js
+### Необходимое ПО
+- **Python:** 3.11+
+- **Node.js:** 18.0+
+- **Git:** 2.0+
+- **Docker:** 20.0+ (опционально)
+- **PostgreSQL:** 12+ (опционально)
+- **Redis:** 5.0+ (опционально)
 
-### Способ 1: Официальный сайт (Рекомендуется)
+## 🏗️ Способы установки
 
-1. **Скачайте Node.js:**
-   - Перейдите на [nodejs.org](https://nodejs.org/)
-   - Выберите версию LTS (Long Term Support)
-   - Скачайте установщик для Windows (.msi)
+### 1. Быстрая установка с Docker Compose (Рекомендуется)
 
-2. **Установите Node.js:**
-   - Запустите скачанный файл
-   - Следуйте инструкциям мастера установки
-   - Убедитесь, что отмечена опция "Add to PATH"
-   - Дождитесь завершения установки
+```bash
+# 1. Клонирование репозитория
+git clone https://github.com/your-org/networkview-is.git
+cd networkview-is
 
-3. **Проверьте установку:**
-   Откройте новую командную строку (PowerShell) и выполните:
-   ```powershell
-   node --version
-   npm --version
-   ```
+# 2. Запуск всех сервисов
+docker-compose up -d
 
-### Способ 2: Использование Chocolatey
+# 3. Проверка статуса
+docker-compose ps
 
-1. **Установите Chocolatey** (если не установлен):
-   ```powershell
-   Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-   ```
-
-2. **Установите Node.js через Chocolatey:**
-   ```powershell
-   choco install nodejs
-   ```
-
-### Способ 3: Использование Winget (Windows Package Manager)
-
-```powershell
-winget install OpenJS.NodeJS
+# 4. Просмотр логов
+docker-compose logs -f
 ```
 
-## 🚀 Запуск NetworkView IS
+**Доступ к сервисам:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+- Kibana: http://localhost:5601
+- Grafana: http://localhost:3001
+- Flower: http://localhost:5555
 
-После установки Node.js выполните следующие шаги:
+### 2. Установка для разработки
 
-### 1. Установка зависимостей
+#### 2.1. Клонирование и подготовка
 
-Откройте PowerShell в папке проекта и выполните:
+```bash
+# Клонирование
+git clone https://github.com/your-org/networkview-is.git
+cd networkview-is
 
-```powershell
-cd "C:\Users\Kumsk\Desktop\NetworkView-IS"
+# Установка всех зависимостей
+npm run setup
+```
+
+#### 2.2. Настройка Backend
+
+```bash
+cd backend
+
+# Создание виртуального окружения
+python -m venv venv
+
+# Активация (Linux/Mac)
+source venv/bin/activate
+# Активация (Windows)
+venv\Scripts\activate
+
+# Установка зависимостей
+pip install -r requirements.txt
+
+# Создание файла окружения
+cp .env.example .env
+# Отредактируйте .env файл под ваши настройки
+
+# Инициализация базы данных
+alembic upgrade head
+
+# Запуск сервера разработки
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+#### 2.3. Настройка Frontend
+
+```bash
+cd frontend
+
+# Установка зависимостей
 npm install
-```
 
-### 2. Запуск системы
+# Создание файла окружения
+cp .env.example .env.local
+# Отредактируйте .env.local под ваши настройки
 
-#### Режим разработки (рекомендуется):
-```powershell
+# Запуск сервера разработки
 npm run dev
 ```
 
-#### Только сервер:
-```powershell
-npm run dev:server
+#### 2.4. Одновременный запуск (из корневой директории)
+
+```bash
+# Запуск backend и frontend одновременно
+npm run dev
 ```
 
-#### Продакшн режим:
-```powershell
-npm start
+### 3. Продакшн установка
+
+#### 3.1. Установка на сервер
+
+```bash
+# Обновление системы
+sudo apt update && sudo apt upgrade -y
+
+# Установка зависимостей
+sudo apt install -y python3.11 python3.11-venv nodejs npm postgresql redis-server nginx
+
+# Клонирование проекта
+git clone https://github.com/your-org/networkview-is.git
+cd networkview-is
+
+# Создание пользователя для приложения
+sudo useradd -m -s /bin/bash networkview
+sudo chown -R networkview:networkview .
 ```
 
-### 3. Открытие в браузере
+#### 3.2. Настройка базы данных
 
-После запуска откройте браузер и перейдите по адресу:
-- **Клиентская часть:** http://localhost:3001
-- **API сервер:** http://localhost:3000
+```bash
+# Вход в PostgreSQL
+sudo -u postgres psql
 
-## 🔧 Альтернативные способы запуска
+# Создание БД и пользователя
+CREATE DATABASE networkview;
+CREATE USER networkview WITH ENCRYPTED PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE networkview TO networkview;
+\q
+```
 
-### Без установки зависимостей (Упрощенная версия)
+#### 3.3. Настройка Backend
 
-Если у вас проблемы с установкой Node.js, можно использовать упрощенную версию:
+```bash
+# Переход к пользователю приложения
+sudo -u networkview -i
+cd /path/to/networkview-is/backend
 
-1. **Создайте простой HTTP сервер на Python** (если установлен):
-   ```powershell
-   cd "C:\Users\Kumsk\Desktop\NetworkView-IS"
-   python -m http.server 8000
-   ```
+# Создание venv и установка зависимостей
+python3.11 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 
-2. **Откройте в браузере:**
-   http://localhost:8000
+# Настройка окружения
+cat > .env << EOF
+SECRET_KEY=your-super-secret-production-key
+DATABASE_URL=postgresql://networkview:your_password@localhost:5432/networkview
+REDIS_URL=redis://localhost:6379
+CORS_ORIGINS=["https://your-domain.com"]
+MAX_FILE_SIZE=500
+UPLOAD_PATH=/var/www/networkview/uploads
+EOF
 
-   ⚠️ **Внимание:** В этом режиме будет работать только клиентская часть без серверной функциональности.
+# Инициализация БД
+alembic upgrade head
 
-### Использование VS Code Live Server
+# Создание системного сервиса
+sudo tee /etc/systemd/system/networkview-backend.service > /dev/null << EOF
+[Unit]
+Description=NetworkView IS Backend
+After=network.target
 
-1. **Установите Visual Studio Code**
-2. **Установите расширение "Live Server"**
-3. **Откройте папку проекта в VS Code**
-4. **Щелкните правой кнопкой на index.html → "Open with Live Server"**
+[Service]
+Type=exec
+User=networkview
+Group=networkview
+WorkingDirectory=/path/to/networkview-is/backend
+Environment=PATH=/path/to/networkview-is/backend/venv/bin
+ExecStart=/path/to/networkview-is/backend/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+Restart=always
 
-## 🐛 Решение проблем
+[Install]
+WantedBy=multi-user.target
+EOF
 
-### Проблема: "npm не распознано"
+# Запуск сервиса
+sudo systemctl daemon-reload
+sudo systemctl enable networkview-backend
+sudo systemctl start networkview-backend
+```
 
-**Решение:**
-1. Убедитесь, что Node.js установлен правильно
-2. Перезапустите PowerShell
-3. Проверьте переменную PATH:
-   ```powershell
-   echo $env:PATH
-   ```
-4. Если Node.js не в PATH, добавьте вручную:
-   - Откройте "Системные свойства" → "Переменные среды"
-   - Добавьте путь к Node.js (обычно C:\Program Files\nodejs)
+#### 3.4. Настройка Frontend
 
-### Проблема: Ошибки при установке пакетов
+```bash
+cd /path/to/networkview-is/frontend
 
-**Решение:**
-1. Очистите кэш npm:
-   ```powershell
-   npm cache clean --force
-   ```
-2. Удалите node_modules и переустановите:
-   ```powershell
-   Remove-Item -Recurse -Force node_modules
-   Remove-Item package-lock.json
-   npm install
-   ```
+# Установка зависимостей
+npm ci --production
 
-### Проблема: Порт уже используется
+# Настройка окружения
+cat > .env.production << EOF
+VITE_API_URL=https://your-domain.com/api
+VITE_WS_URL=wss://your-domain.com/ws
+EOF
 
-**Решение:**
-1. Измените порт в package.json
-2. Или завершите процесс, использующий порт:
-   ```powershell
-   netstat -ano | findstr :3000
-   taskkill /PID <PID номер> /F
-   ```
+# Сборка
+npm run build
 
-### Проблема: Файрвол блокирует соединение
+# Копирование в nginx
+sudo cp -r dist/* /var/www/html/
+```
 
-**Решение:**
-1. Разрешите Node.js в файрволе Windows
-2. Или временно отключите файрвол для тестирования
+#### 3.5. Настройка Nginx
 
-## 📝 Проверка работы системы
+```bash
+sudo tee /etc/nginx/sites-available/networkview << EOF
+server {
+    listen 80;
+    server_name your-domain.com;
+    
+    # Redirect to HTTPS
+    return 301 https://\$server_name\$request_uri;
+}
 
-После успешного запуска вы должны увидеть:
+server {
+    listen 443 ssl http2;
+    server_name your-domain.com;
+    
+    # SSL Configuration
+    ssl_certificate /path/to/ssl/cert.pem;
+    ssl_certificate_key /path/to/ssl/key.pem;
+    
+    # Frontend
+    location / {
+        root /var/www/html;
+        try_files \$uri \$uri/ /index.html;
+    }
+    
+    # Backend API
+    location /api/ {
+        proxy_pass http://localhost:8000/api/;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+    
+    # WebSocket
+    location /ws/ {
+        proxy_pass http://localhost:8000/ws/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+    
+    # Static files
+    location /uploads/ {
+        alias /var/www/networkview/uploads/;
+        expires 1y;
+    }
+}
+EOF
 
-1. **В консоли:**
-   ```
-   🚀 NetworkView IS Server запущен на порту 3000
-   📁 Статические файлы: http://localhost:3000
-   🔗 API: http://localhost:3000/api
-   ⚡ WebSocket: ws://localhost:3000
-   📊 Статистика: http://localhost:3000/api/stats
+# Активация сайта
+sudo ln -s /etc/nginx/sites-available/networkview /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+## 🔧 Конфигурация
+
+### Backend (.env)
+
+```bash
+# Основные настройки
+SECRET_KEY=your-super-secret-key
+DEBUG=False
+ENVIRONMENT=production
+
+# База данных
+DATABASE_URL=postgresql://user:password@localhost:5432/networkview
+
+# Redis
+REDIS_URL=redis://localhost:6379
+
+# Безопасность
+CORS_ORIGINS=["https://your-domain.com"]
+ALLOWED_HOSTS=["your-domain.com"]
+
+# Файлы
+MAX_FILE_SIZE=500
+UPLOAD_PATH=/var/www/networkview/uploads
+
+# Интеграции
+ZABBIX_URL=http://zabbix.local
+ZABBIX_USERNAME=admin
+ZABBIX_PASSWORD=password
+ZABBIX_ENABLED=True
+
+PROMETHEUS_URL=http://prometheus.local:9090
+PROMETHEUS_ENABLED=True
+
+# Email
+EMAIL_SMTP_HOST=smtp.gmail.com
+EMAIL_SMTP_PORT=587
+EMAIL_USERNAME=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
+
+# Telegram
+TELEGRAM_BOT_TOKEN=your-bot-token
+TELEGRAM_CHAT_ID=your-chat-id
+
+# Логирование
+LOG_LEVEL=INFO
+LOG_FILE=/var/log/networkview/app.log
+
+# Celery
+CELERY_BROKER_URL=redis://localhost:6379
+CELERY_RESULT_BACKEND=redis://localhost:6379
+```
+
+### Frontend (.env.production)
+
+```bash
+# API
+VITE_API_URL=https://your-domain.com/api
+VITE_WS_URL=wss://your-domain.com/ws
+
+# Настройки приложения
+VITE_APP_NAME=NetworkView IS
+VITE_APP_VERSION=2.0.0
+VITE_DEFAULT_THEME=light
+VITE_DEFAULT_LANGUAGE=ru
+
+# Интеграции
+VITE_SENTRY_DSN=your-sentry-dsn
+VITE_GOOGLE_ANALYTICS_ID=your-ga-id
+
+# Функциональность
+VITE_MAX_FILE_SIZE=524288000
+VITE_SUPPORTED_LANGUAGES=["ru", "en"]
+```
+
+## 🔍 Проверка установки
+
+### 1. Проверка сервисов
+
+```bash
+# Backend
+curl http://localhost:8000/health
+
+# Frontend
+curl http://localhost:3000
+
+# База данных
+psql -h localhost -U networkview -d networkview -c "SELECT version();"
+
+# Redis
+redis-cli ping
+```
+
+### 2. Проверка логов
+
+```bash
+# Backend
+tail -f /var/log/networkview/app.log
+
+# Nginx
+sudo tail -f /var/log/nginx/error.log
+
+# PostgreSQL
+sudo tail -f /var/log/postgresql/postgresql-*.log
+
+# Systemd сервисы
+sudo journalctl -u networkview-backend -f
+```
+
+### 3. Тест функциональности
+
+```bash
+# Создание тестового пользователя
+curl -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username": "test", "email": "test@example.com", "password": "test123"}'
+
+# Логин
+curl -X POST http://localhost:8000/auth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=admin&password=admin123"
+```
+
+## 🛠️ Настройка интеграций
+
+### Zabbix
+
+```bash
+# В Zabbix создайте API пользователя
+# Настройте в .env:
+ZABBIX_URL=http://your-zabbix.local
+ZABBIX_USERNAME=api_user
+ZABBIX_PASSWORD=api_password
+ZABBIX_ENABLED=True
+```
+
+### Prometheus
+
+```bash
+# Настройка Prometheus для сбора метрик
+# prometheus.yml
+global:
+  scrape_interval: 30s
+
+scrape_configs:
+  - job_name: 'networkview'
+    static_configs:
+      - targets: ['localhost:8000']
+    metrics_path: '/metrics'
+```
+
+### Elasticsearch
+
+```bash
+# Установка Elasticsearch
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+echo "deb https://artifacts.elastic.co/packages/8.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-8.x.list
+sudo apt update && sudo apt install elasticsearch
+
+# Настройка
+sudo systemctl enable elasticsearch
+sudo systemctl start elasticsearch
+
+# Проверка
+curl http://localhost:9200
+```
+
+## 🔐 Настройка безопасности
+
+### SSL/TLS сертификат
+
+```bash
+# Получение бесплатного SSL от Let's Encrypt
+sudo apt install certbot python3-certbot-nginx
+
+# Получение сертификата
+sudo certbot --nginx -d your-domain.com
+
+# Автоматическое обновление
+sudo crontab -e
+# Добавить: 0 12 * * * /usr/bin/certbot renew --quiet
+```
+
+### Настройка firewall
+
+```bash
+# UFW
+sudo ufw enable
+sudo ufw allow ssh
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw deny 8000/tcp  # Закрыть прямой доступ к API
+sudo ufw status
+```
+
+### Backup
+
+```bash
+# Создание скрипта резервного копирования
+cat > /usr/local/bin/networkview-backup.sh << 'EOF'
+#!/bin/bash
+BACKUP_DIR="/var/backups/networkview"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+# Создание директории
+mkdir -p $BACKUP_DIR
+
+# Backup базы данных
+pg_dump -U networkview networkview > $BACKUP_DIR/db_$DATE.sql
+
+# Backup файлов
+tar -czf $BACKUP_DIR/uploads_$DATE.tar.gz /var/www/networkview/uploads
+
+# Удаление старых backup'ов (старше 30 дней)
+find $BACKUP_DIR -type f -mtime +30 -delete
+
+echo "Backup completed: $DATE"
+EOF
+
+chmod +x /usr/local/bin/networkview-backup.sh
+
+# Добавление в cron
+sudo crontab -e
+# Добавить: 0 2 * * * /usr/local/bin/networkview-backup.sh
+```
+
+## 🐛 Устранение неполадок
+
+### Частые проблемы
+
+1. **Backend не запускается**
+   ```bash
+   # Проверка зависимостей
+   pip check
    
-   ✅ Сервер готов к работе!
+   # Проверка портов
+   sudo netstat -tlnp | grep :8000
+   
+   # Проверка логов
+   journalctl -u networkview-backend
    ```
 
-2. **В браузере:**
-   - Заголовок "NetworkView IS"
-   - 4 виджета в сетке
-   - Индикатор "Онлайн" в правом верхнем углу
-   - Примеры документов и устройств
+2. **Frontend не собирается**
+   ```bash
+   # Очистка кэша
+   npm cache clean --force
+   rm -rf node_modules package-lock.json
+   npm install
+   
+   # Проверка TypeScript
+   npm run type-check
+   ```
 
-## 🎯 Первые шаги
+3. **База данных недоступна**
+   ```bash
+   # Проверка статуса PostgreSQL
+   sudo systemctl status postgresql
+   
+   # Проверка подключения
+   pg_isready -h localhost -p 5432
+   
+   # Проверка логов
+   sudo tail -f /var/log/postgresql/postgresql-*.log
+   ```
 
-1. **Изучите интерфейс:**
-   - Попробуйте поиск в модуле документов
-   - Загрузите тестовую схему в модуле диаграмм
-   - Проверьте мониторинг устройств
+4. **Redis недоступен**
+   ```bash
+   # Проверка статуса
+   sudo systemctl status redis-server
+   
+   # Проверка подключения
+   redis-cli ping
+   
+   # Проверка конфигурации
+   redis-cli config get "*"
+   ```
 
-2. **Загрузите тестовые файлы:**
-   - PDF документ в модуль документации
-   - .drawio файл в модуль диаграмм
+### Мониторинг
 
-3. **Протестируйте функции:**
-   - Предварительный просмотр документов
-   - Пинг устройств
-   - Экспорт данных
+```bash
+# Установка htop для мониторинга ресурсов
+sudo apt install htop
+
+# Мониторинг дискового пространства
+df -h
+
+# Мониторинг памяти
+free -h
+
+# Мониторинг процессов
+ps aux | grep -E "(uvicorn|nginx|postgres|redis)"
+```
 
 ## 📞 Поддержка
 
-Если у вас возникли проблемы:
+При возникновении проблем:
 
-1. **Проверьте логи в консоли**
-2. **Откройте Developer Tools в браузере** (F12)
-3. **Убедитесь, что все порты доступны**
-4. **Проверьте права доступа к файлам**
+1. Проверьте [документацию](./README.md)
+2. Изучите [известные проблемы](https://github.com/your-org/networkview-is/issues)
+3. Создайте [новый issue](https://github.com/your-org/networkview-is/issues/new)
+4. Обратитесь в [поддержку](mailto:support@networkview.local)
 
-## 🎉 Готово!
+## 🎉 Поздравляем!
 
-После выполнения всех шагов система NetworkView IS будет полностью готова к работе!
+Если вы дошли до этого момента, NetworkView IS 2.0 успешно установлен и готов к использованию!
 
----
+**Следующие шаги:**
+1. Войдите в систему (admin/admin123)
+2. Измените пароль администратора
+3. Настройте интеграции
+4. Загрузите первые документы
+5. Добавьте сетевые устройства
 
-**Удачного использования NetworkView IS! 🚀** 
+**Полезные ссылки:**
+- [Руководство пользователя](./docs/user-guide.md)
+- [Руководство администратора](./docs/admin-guide.md)
+- [API документация](http://localhost:8000/docs) 

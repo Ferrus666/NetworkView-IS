@@ -1,32 +1,36 @@
 {
   "name": "networkview-is",
-  "version": "1.0.0",
-  "description": "Информационная система NetworkView IS с интерактивными виджетами для управления документацией ИБ и диаграммами",
-  "main": "server/index.js",
+  "version": "2.0.0",
+  "description": "Веб-приложение для управления сетевой инфраструктурой с нормативной документацией, интерактивной визуализацией сети, SAST-анализом и мониторингом",
+  "main": "frontend/src/index.js",
   "scripts": {
-    "start": "node server/index.js",
-    "dev": "concurrently \"nodemon server/index.js\" \"live-server --port=3001 --host=localhost --open=./\"",
-    "dev:server": "nodemon server/index.js",
-    "dev:client": "live-server --port=3001 --host=localhost --open=./"
+    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "frontend": "cd frontend && npm start",
+    "backend": "cd backend && python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && pip install -r requirements.txt",
+    "build": "cd frontend && npm run build",
+    "test": "cd frontend && npm test",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\" --names \"API,WEB\" --prefix-colors \"yellow,cyan\"",
+    "setup": "npm run install:all"
   },
-  "keywords": ["information-security", "network-diagrams", "drawio", "document-management"],
+  "keywords": [
+    "information-security", 
+    "network-infrastructure", 
+    "sast-analysis", 
+    "network-monitoring", 
+    "documentation-management",
+    "drawio-visualization",
+    "react",
+    "fastapi",
+    "oauth2",
+    "elasticsearch"
+  ],
   "author": "NetworkView IS Team",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "multer": "^1.4.5-lts.1",
-    "socket.io": "^4.7.2",
-    "xml2js": "^0.5.0",
-    "marked": "^5.1.1",
-    "uuid": "^9.0.0",
-    "node-cron": "^3.0.2",
-    "helmet": "^7.0.0",
-    "express-rate-limit": "^6.8.1"
+    "concurrently": "^8.2.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1",
-    "concurrently": "^8.2.0",
-    "live-server": "^1.2.2"
+    "nodemon": "^3.0.1"
   }
 } 
