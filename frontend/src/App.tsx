@@ -6,6 +6,7 @@ import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { HelmetProvider } from 'react-helmet-async';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Toaster } from 'react-hot-toast';
+import { Box, CircularProgress } from '@mui/material';
 
 import { store } from './store';
 import { useAuth } from './hooks/useAuth';
@@ -19,12 +20,13 @@ import AuthLayout from './components/layout/AuthLayout';
 
 // Pages
 import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import DocumentsPage from './pages/documents/DocumentsPage';
-import DiagramsPage from './pages/diagrams/DiagramsPage';
 import SASTPage from './pages/sast/SASTPage';
 import MonitoringPage from './pages/monitoring/MonitoringPage';
-import SettingsPage from './pages/settings/SettingsPage';
+import NetworkPage from './pages/network/NetworkPage';
+import IntegrationsPage from './pages/integrations/IntegrationsPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -78,17 +80,33 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 // App Routes Component
 const AppRoutes: React.FC = () => {
+  const { state } = useAuth();
+
+  if (state.isLoading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <Routes>
       {/* Public Routes */}
       <Route
         path="/login"
         element={
-          <PublicRoute>
-            <AuthLayout>
-              <LoginPage />
-            </AuthLayout>
-          </PublicRoute>
+          state.isAuthenticated ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <LoginPage />
+          )
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          state.isAuthenticated ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <RegisterPage />
+          )
         }
       />
 
@@ -103,11 +121,11 @@ const AppRoutes: React.FC = () => {
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="documents/*" element={<DocumentsPage />} />
-        <Route path="diagrams/*" element={<DiagramsPage />} />
-        <Route path="sast/*" element={<SASTPage />} />
-        <Route path="monitoring/*" element={<MonitoringPage />} />
-        <Route path="settings/*" element={<SettingsPage />} />
+        <Route path="documents" element={<DocumentsPage />} />
+        <Route path="sast" element={<SASTPage />} />
+        <Route path="monitoring" element={<MonitoringPage />} />
+        <Route path="network" element={<NetworkPage />} />
+        <Route path="integrations" element={<IntegrationsPage />} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>
 

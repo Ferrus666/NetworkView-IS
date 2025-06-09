@@ -1,1 +1,75 @@
- 
+version: '3.8'
+
+services:
+  # Frontend React приложение
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+      - VITE_SUPABASE_URL=https://sfrijfmrmfkcnmwutfvs.supabase.co
+      - VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmcmlqZm1ybWZrY25td3V0ZnZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0ODkwMDAsImV4cCI6MjA2NTA2NTAwMH0.mqT8Tvh57_mBC3Zu9TSG_-pQl7S_JmHvSb3gCU0R8i0
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  # Backend FastAPI приложение
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=bmk-security-cabinet-super-secret-key-2024
+      - SUPABASE_URL=https://sfrijfmrmfkcnmwutfvs.supabase.co
+      - SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmcmlqZm1ybWZrY25td3V0ZnZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0ODkwMDAsImV4cCI6MjA2NTA2NTAwMH0.mqT8Tvh57_mBC3Zu9TSG_-pQl7S_JmHvSb3gCU0R8i0
+      - DATABASE_URL=postgresql://postgres.sfrijfmrmfkcnmwutfvs:[Lky8cdya6]@aws-0-eu-north-1.pooler.supabase.com:6543/postgres
+      - REDIS_URL=redis://redis:6379
+      - CORS_ORIGINS=["http://localhost:3000"]
+    volumes:
+      - ./backend:/app
+      - ./uploads:/app/uploads
+    depends_on:
+      - redis
+    networks:
+      - app-network
+
+  # Redis для кэширования
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+
+  # Nginx для проксирования (опционально для продакшн)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+
+volumes:
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge 

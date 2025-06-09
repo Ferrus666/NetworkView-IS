@@ -22,6 +22,8 @@ from pathlib import Path
 import zipfile
 import shutil
 from contextlib import asynccontextmanager
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import uvicorn
 
 # Настройка логирования
 logging.basicConfig(
@@ -179,11 +181,12 @@ def get_db():
     finally:
         db.close()
 
-# Lifecycle events
+# Lifecycle события
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
-    logger.info("Запуск NetworkView IS Backend...")
+    # Инициализация при запуске
+    await init_db()
+    print("🚀 Приложение запущено")
     
     # Создание супер администратора по умолчанию
     db = SessionLocal()
@@ -204,105 +207,153 @@ async def lifespan(app: FastAPI):
     
     yield
     
-    # Shutdown
-    logger.info("Завершение работы NetworkView IS Backend...")
+    # Очистка при остановке
+    print("🛑 Приложение остановлено")
 
-# Создание приложения
+# Создание FastAPI приложения
 app = FastAPI(
-    title="NetworkView IS API",
-    description="API для управления сетевой инфраструктурой",
+    title="BMK Security Cabinet",
+    description="Личный кабинет инженера по информационной безопасности банка БМК",
     version="2.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
     lifespan=lifespan
 )
 
-# Middleware
+# Настройка CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=["localhost", "127.0.0.1", "*.networkview.local"]
-)
+# Подключение статических файлов
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-# Зависимости аутентификации
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+# Безопасность
+security = HTTPBearer()
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Получение текущего пользователя по JWT токену"""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-    
-    user = db.query(User).filter(User.username == username).first()
-    if user is None:
-        raise credentials_exception
-    return user
+        from auth.jwt_handler import verify_token
+        payload = verify_token(credentials.credentials)
+        return payload
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)):
-    if not current_user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
+# Подключение роутеров
+app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+app.include_router(documents.router, prefix="/api/documents", tags=["Documents"])
+app.include_router(sast.router, prefix="/api/sast", tags=["SAST Analysis"])
+app.include_router(monitoring.router, prefix="/api/monitoring", tags=["Network Monitoring"])
+app.include_router(network.router, prefix="/api/network", tags=["Network Visualization"])
+app.include_router(integrations.router, prefix="/api/integrations", tags=["Integrations"])
 
-def require_role(required_roles: List[str]):
-    def role_checker(current_user: User = Depends(get_current_active_user)):
-        if current_user.role not in required_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permissions"
-            )
-        return current_user
-    return role_checker
-
-# Основные маршруты
+# Основные эндпоинты
 @app.get("/")
 async def root():
-    return {"message": "NetworkView IS API v2.0.0", "status": "running"}
+    """Главная страница API"""
+    return {
+        "message": "BMK Security Cabinet API",
+        "version": "2.0.0",
+        "docs": "/docs",
+        "redoc": "/redoc"
+    }
 
 @app.get("/health")
 async def health_check():
+    """Проверка состояния сервиса"""
+    try:
+        # Проверка Redis
+        redis_status = redis_client.ping()
+        
+        # Проверка Supabase
+        from database import supabase
+        supabase_status = True  # Здесь можно добавить проверку подключения
+        
+        return {
+            "status": "healthy",
+            "redis": "ok" if redis_status else "error",
+            "supabase": "ok" if supabase_status else "error",
+            "version": "2.0.0"
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "error": str(e)
+        }
+
+@app.get("/api/user/profile")
+async def get_user_profile(current_user = Depends(get_current_user)):
+    """Получение профиля пользователя"""
     return {
-        "status": "healthy",
-        "timestamp": datetime.utcnow(),
-        "database": "connected",
-        "redis": "connected" if redis_client else "disconnected"
+        "user_id": current_user.get("sub"),
+        "email": current_user.get("email"),
+        "role": current_user.get("role", "user")
     }
 
-# Аутентификация
-@app.post("/auth/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
+# Эндпоинт для WebSocket (мониторинг в реальном времени)
+from fastapi import WebSocket, WebSocketDisconnect
+import json
+import asyncio
 
-@app.get("/auth/me")
-async def read_users_me(current_user: User = Depends(get_current_active_user)):
-    return {
-        "id": current_user.id,
-        "username": current_user.username,
-        "email": current_user.email,
-        "role": current_user.role,
-        "is_active": current_user.is_active
-    }
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
 
-# API маршруты включаются из отдельных файлов
-# Они будут созданы в следующих файлах 
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def send_personal_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            try:
+                await connection.send_text(message)
+            except:
+                await self.disconnect(connection)
+
+manager = ConnectionManager()
+
+@app.websocket("/ws/monitoring")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            # Симуляция данных мониторинга
+            monitoring_data = {
+                "timestamp": "2024-01-15T10:30:00Z",
+                "devices": [
+                    {"id": 1, "name": "Server-01", "status": "online", "cpu": 45.2, "ram": 67.8},
+                    {"id": 2, "name": "Router-01", "status": "online", "cpu": 23.1, "ram": 34.5},
+                    {"id": 3, "name": "Switch-01", "status": "offline", "cpu": 0, "ram": 0}
+                ],
+                "network_traffic": {
+                    "incoming": 1024.5,
+                    "outgoing": 756.3
+                }
+            }
+            await websocket.send_text(json.dumps(monitoring_data))
+            await asyncio.sleep(5)  # Отправка данных каждые 5 секунд
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    ) 
